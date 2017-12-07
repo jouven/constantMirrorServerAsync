@@ -18,6 +18,7 @@ downloadServerSocket_c::downloadServerSocket_c(
     //QOUT_TS("downloadServerSocket_c::ctor()" << endl);
 #endif
     connect(this, &QTcpSocket::readyRead, this, &downloadServerSocket_c::readyRead_f);
+    connect(this, &QSslSocket::encryptedBytesWritten, this, &downloadServerSocket_c::bytesWritten_f);
     connect(this, &QTcpSocket::disconnected, this, &downloadServerSocket_c::deleteLater);
     connect(this, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
     [=](QAbstractSocket::SocketError socketError)
@@ -108,6 +109,7 @@ void downloadServerSocket_c::readyRead_f()
                         //first byte is to tell status, 256 values should be fine? for now
                         //0 = success
                         this->write("0");
+                        unwrittenBytesCount_pri = sizeReadTmp + 1;
                         bool rehashingTmp(false);
                         do
                         {
@@ -121,19 +123,51 @@ void downloadServerSocket_c::readyRead_f()
                                 return;
                             }
                             this->write(&bufferTmp[0], sizeReadTmp);
-                            if (this->bytesToWrite() > actualBufferSize * 32)
+                            //Explanation time:
+                            //This happens in linux and windows with different degrees, but it's the same effect.
+                            //Writing on the socket doesn't block until it's sent,
+                            //what happens then is that the process memory keeps growing
+                            //until qt-network-framework/kernel/whatever decides to start sending.
+                            //And no matter what case:
+                            //1 The server writes faster that the network can transmit
+                            // or the client can read-write in its storage.
+                            //2 The client and network are faster than the server.
+                            //This effect can still happen, because still the server storage can be faster than the network stack, latency wise.
+                            //Also it's impossible to know what the host might be doing with the network or the storage...
+                            //This effect is pretty evident when sending files larger than the system memory size.
+                            //It is pretty common since regular HD read speed is faster than the write speed
+
+                            //Even when flushing/QCoreApplication::processEvents() after every write this effect can/will eventually happen,
+                            //the best? way to mitigate this is to add a sleep and wait for encryptedBytesWritten,
+                            //because without the sleep the cpu usage skyrockets looping flush/QCoreApplication::processEvents() until encryptedBytesWritten happens.
+                            //And without any kind of wait the "pending" writes stay in memory and if the read data is big enough it can collapse the memory and the system
+
+                            //It must be taken in account that this might not be apparent all the time because, initially the server disk activy is split
+                            //between hashing and reading the files that's sending,
+                            //but at some point it will finish hashing and all the disk activiy will be available for the "sending".
+                            //Same with the client, at the start if no common files are present all the disk activity can focus on downloading-writing
+                            //but once it finishes some downloads it will split time between downloading and checking the hashes of the finished downloads,
+                            //and it can complex... if there are multiple clients,
+                            //if the OS decided to cache the data and it's sending the same data at memory read speeds...
+
+                            //at 2MB of unwritten data start waiting before writing more,
+                            //because otherwise the memory usage will grow out of control,
+                            //already with this measure it's already using 2MB of memory
+                            //per socket (if the read data is that size or more)
+                            //This theoretically limits the speed to 2000MB/s
+                            while ((unwrittenBytesCount_pri > (BUFFERSIZE * 32 * 2)) and eines::signal::isRunning_f())
                             {
-                                while (not this->flush() and eines::signal::isRunning_f())
-                                {
-                                    QThread::msleep(1);
-                                }
+                                QCoreApplication::processEvents();
+                                QThread::msleep(1);
                             }
+
                             sizeReadTmp = fileTmp.read(&bufferTmp[0], actualBufferSize);
+                            unwrittenBytesCount_pri = unwrittenBytesCount_pri + sizeReadTmp;
                             if (fileFindResult_con.first->second.hashing_pub)
                             {
                                 rehashingTmp = true;
                             }
-                        } while ((sizeReadTmp > 0) and (fileTmp.bytesAvailable() >= actualBufferSize) and not rehashingTmp);
+                        } while ((sizeReadTmp > 0) and (fileTmp.bytesAvailable() >= actualBufferSize) and not rehashingTmp and eines::signal::isRunning_f());
                         //the loop goes out when:
                         //1 there is no more to read OR
                         //2 buffer is bigger than what's left to read
@@ -200,6 +234,13 @@ void downloadServerSocket_c::readyRead_f()
     //QOUT_TS("(downloadServerSocket_c::readyRead_f) this->disconnectFromHost()" << endl);
 #endif
     this->disconnectFromHost();
+}
+
+void downloadServerSocket_c::bytesWritten_f(qint64 bytes_par)
+{
+    //QOUT_TS("(downloadServerSocket_c::bytesWritten_f) bytes_par " << bytes_par << endl);
+    unwrittenBytesCount_pri = unwrittenBytesCount_pri - bytes_par;
+    //QOUT_TS("(downloadServerSocket_c::bytesWritten_f) unwrittenBytesCount_pri " << unwrittenBytesCount_pri << endl);
 }
 
 //void downloadServerSocket_c::disconnected_f()

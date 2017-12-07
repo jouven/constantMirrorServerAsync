@@ -4,6 +4,8 @@
 
 #include "baseClassQtso/baseClassQt.hpp"
 #include "fileHashQtso/fileHashQt.hpp"
+#include "downloadServer.hpp"
+#include "fileListRequestServer.hpp"
 
 #include <QStringList>
 #include <QHostAddress>
@@ -47,7 +49,7 @@ class mirrorConfigSourceDestinationMapping_c : public eines::baseClassQt_c
     QString includeDirectoriesWithFileX_pri;
 
     //"source"/"destination" how often to check local files for changes
-    qint64 localCheckIntervalMilliseconds_pri = 1000;
+    qint64 localCheckIntervalMilliseconds_pri = 2000;
 
     int_fast64_t localLastCheckedIntervalMilliseconds_pri = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
@@ -107,6 +109,9 @@ class mirrorConfig_c : public eines::baseClassQt_c
 
     std::vector<mirrorConfigSourceDestinationMapping_c> sourceDestinationMappings_pri;
 
+    //if the sender reads faster than the client can write...
+    uint_fast64_t senderFasterThanReceiver_pri = 0;
+
     //serialized/deserialized fields END
 
     std::unordered_map<std::string, clientInfo_s> recentClients_pri;
@@ -137,6 +142,8 @@ class mirrorConfig_c : public eines::baseClassQt_c
     void write_f(QJsonObject &json) const;
 
     QTimer* mainLoopTimer_pri;
+    downloadServer_c* downloadServer_pri;
+    fileListRequestServer_c* fileRequestServer_pri;
 public:
 
     //QString selfServerAddress_f() const;

@@ -1,7 +1,5 @@
 #include "mirrorConfig.hpp"
 
-#include "downloadServer.hpp"
-#include "fileListRequestServer.hpp"
 #include "updateClient.hpp"
 
 #include "signalso/signal.hpp"
@@ -600,6 +598,7 @@ R"({
         qtErrRef_ext() << "Errors:\n" << errorStr << endl;
         returnValue_ext = EXIT_FAILURE;
         eines::signal::stopRunning_f();
+        QCoreApplication::quit();
         return;
     }
     else
@@ -616,7 +615,7 @@ R"({
             QSslConfiguration::setDefaultConfiguration(sslOptions);
 
             //start the download server
-            new downloadServer_c(
+            downloadServer_pri = new downloadServer_c(
                         selfServerAddress_pri
                         , downloadServerPort_pri
                         , qApp
@@ -625,7 +624,7 @@ R"({
             //QObject::connect(updateServerObj, &QTcpServer::destroyed, updateServerObj, &QObject::deleteLater);
 
             //start the the file list server
-            new fileListRequestServer_c(
+            fileRequestServer_pri = new fileListRequestServer_c(
                         selfServerAddress_pri
                         , fileListServerPort_pri
                         , qApp
@@ -725,6 +724,14 @@ void mirrorConfig_c::mainLoop_f()
             if (mainLoopTimer_pri->interval() != 10)
             {
                 mainLoopTimer_pri->start(10);
+                if (downloadServer_pri->isListening())
+                {
+                    downloadServer_pri->close();
+                }
+                if (fileRequestServer_pri->isListening())
+                {
+                    fileRequestServer_pri->close();
+                }
             }
         }
         else
