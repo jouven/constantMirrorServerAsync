@@ -3,6 +3,8 @@
 #include "mirrorConfig.hpp"
 #include "essentialQtso/essentialQt.hpp"
 
+#include <QJsonDocument>
+
 fileListRequestSocket_c::fileListRequestSocket_c(const qintptr socketDescriptor_par_con
         , QObject *parent_par) :
     QSslSocket(parent_par)
@@ -50,24 +52,36 @@ fileListRequestSocket_c::fileListRequestSocket_c(const qintptr socketDescriptor_
 
 void fileListRequestSocket_c::readyRead_f()
 {
-    quint32 updatePort(this->readAll().toULong());
-    //QTERROR localhost/loopback ip to toIPv4Address = 0, when it should be 2130706433, toString does a ::1 which is the equivalent of 127.0.0.1 for IPv6
-//    quint32 ipV4Tmp(this->peerAddress().toIPv4Address());
-//    if (ipV4Tmp == 0)
-//    {
-//        ipV4Tmp = 2130706433;
-//    }
-    mirrorConfig_ext.addRecentClient(this->peerAddress(), updatePort);
-    //readClientPort_pri = true;
-    //
+    quint32 updatePort(0);
+    bool validAccessTmp(false);
+    if (not mirrorConfig_ext.password_f().isEmpty())
+    {
+        QJsonDocument jsonDocumentTmp(QJsonDocument::fromJson(this->readAll()));
+        requestWithPass_c requestWithPassTmp;
+        requestWithPassTmp.read_f(jsonDocumentTmp.object());
+
+        if (requestWithPassTmp.password_f() == mirrorConfig_ext.password_f())
+        {
+            updatePort = requestWithPassTmp.data_f().toULong();
+            validAccessTmp = true;
+        }
+    }
+    else
+    {
+        updatePort = this->readAll().toULong();
+        validAccessTmp = true;
+    }
+
+    if (validAccessTmp)
+    {
+        mirrorConfig_ext.addRecentClient(this->peerAddress(), updatePort);
 #ifdef DEBUGJOUVEN
-    //QOUT_TS("fileListRequestSocket_c::readyRead_f() this->peerAddress() " << this->peerAddress().toString() << endl);
-    //QOUT_TS("fileListRequestSocket_c::readyRead_f() this->peerAddress().toIPv4Address() " << this->peerAddress().toIPv4Address() << endl);
-    //QOUT_TS("fileListRequestSocket_c::readyRead_f() updatePort " << updatePort << endl);
+        //QOUT_TS("fileListRequestSocket_c::readyRead_f() this->peerAddress() " << this->peerAddress().toString() << endl);
+        //QOUT_TS("fileListRequestSocket_c::readyRead_f() this->peerAddress().toIPv4Address() " << this->peerAddress().toIPv4Address() << endl);
+        //QOUT_TS("fileListRequestSocket_c::readyRead_f() updatePort " << updatePort << endl);
 #endif
-    this->write(mirrorConfig_ext.JSONFileListData_f());
-    //sendFileList_f();
-    //disconnectAfter_f();
+        this->write(mirrorConfig_ext.JSONFileListData_f());
+    }
     this->disconnectFromHost();
 }
 

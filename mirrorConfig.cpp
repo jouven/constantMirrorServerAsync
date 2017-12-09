@@ -34,6 +34,36 @@ int_fast64_t generateId_f()
     return rootId;
 }
 
+
+requestWithPass_c::requestWithPass_c(
+        const QString &data_par_con
+        , const QString &password_par_con)
+    : data_pri(data_par_con)
+    , password_pri(password_par_con)
+{}
+
+void requestWithPass_c::read_f(const QJsonObject &json)
+{
+    data_pri = json["data"].toString();
+    password_pri = json["password"].toString();
+}
+
+void requestWithPass_c::write_f(QJsonObject &json) const
+{
+    json["data"] = data_pri;
+    json["password"] = password_pri;
+}
+
+QString requestWithPass_c::data_f() const
+{
+    return data_pri;
+}
+
+QString requestWithPass_c::password_f() const
+{
+    return password_pri;
+}
+
 //QString mirrorConfigSourceDestinationMapping_c::sourcePath_f() const
 //{
 //    return sourcePath_pri;
@@ -345,6 +375,12 @@ quint16 mirrorConfig_c::fileListServerPort_f() const
     return fileListServerPort_pri;
 }
 
+QString mirrorConfig_c::password_f() const
+{
+    return password_pri;
+}
+
+
 void mirrorConfig_c::generateJSONFileList()
 {
     QMutexLocker locker1(getAddMutex_f("JSONFileList"));
@@ -467,6 +503,7 @@ void mirrorConfig_c::read_f(const QJsonObject &json)
         mirrorConfigSourceDestinationMappingTmp.read_f(mirrorConfigSourceDestinationJsonObject);
         sourceDestinationMappings_pri.emplace_back(mirrorConfigSourceDestinationMappingTmp);
     }
+    password_pri = json["password"].toString();
 }
 void mirrorConfig_c::write_f(QJsonObject &json) const
 {
@@ -482,6 +519,7 @@ void mirrorConfig_c::write_f(QJsonObject &json) const
     json["selfServerAddress"] = selfServerAddressStr_pri;
     json["requestServerPort"] = fileListServerPort_pri;
     json["fileServerPort"] = downloadServerPort_pri;
+    json["password"] = password_pri;
 }
 
 void mirrorConfig_c::initialSetup_f()
@@ -630,22 +668,22 @@ R"({
                         , qApp
             );
 
-            int_fast64_t tmpCycleTimeoutMilliseconds((gcdWaitMillisecondsAll_pri / 4) - 1);
-            if (tmpCycleTimeoutMilliseconds < 1)
-            {
-                tmpCycleTimeoutMilliseconds = 1;
-            }
-            //else if the machine goes down it might not wait for the program to finish
-            if (tmpCycleTimeoutMilliseconds > 5000)
-            {
-                tmpCycleTimeoutMilliseconds = 5000;
-            }
+//            int_fast64_t tmpCycleTimeoutMilliseconds((gcdWaitMillisecondsAll_pri / 4) - 1);
+//            if (tmpCycleTimeoutMilliseconds < 1)
+//            {
+//                tmpCycleTimeoutMilliseconds = 1;
+//            }
+//            //else if the machine goes down it might not wait for the program to finish
+//            if (tmpCycleTimeoutMilliseconds > 5000)
+//            {
+//                tmpCycleTimeoutMilliseconds = 5000;
+//            }
 
             mainLoopTimer_pri = new QTimer(qApp);
             QObject::connect(mainLoopTimer_pri, &QTimer::timeout, std::bind(&mirrorConfig_c::mainLoop_f, &mirrorConfig_ext));
 
             //QOUT_TS("operationsConfig_c::initialSetup_f() tmpCycleTimeout " << tmpCycleTimeoutMilliseconds << endl);
-            mainLoopTimer_pri->start(tmpCycleTimeoutMilliseconds);
+            mainLoopTimer_pri->start(100);
         }
     }
 }
@@ -713,6 +751,11 @@ void mirrorConfig_c::mainLoop_f()
                 QObject::connect(updateClientObj, &QTcpSocket::disconnected, updateClientObj, &QObject::deleteLater);
             }
         }
+        else
+        {
+            //TODO someday?
+            //remove recent clients that aren't recent anymore
+        }
     }
     else
     {
@@ -747,3 +790,5 @@ void mirrorConfig_c::mainLoop_f()
 }
 
 mirrorConfig_c mirrorConfig_ext;
+
+

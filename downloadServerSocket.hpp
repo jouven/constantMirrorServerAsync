@@ -15,11 +15,9 @@ public:
             , QObject* parent_par = nullptr
     );
 Q_SIGNALS:
-    //void
 private Q_SLOTS:
     void readyRead_f();
     void bytesWritten_f(qint64 bytes_par);
-    //void disconnected_f();
 };
 
 #endif // CMS_DOWNLOADSERVERSOCKET_HPP

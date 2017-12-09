@@ -6,6 +6,7 @@
 
 #include <QFile>
 #include <QThread>
+#include <QJsonDocument>
 
 #define BUFFERSIZE 1024 * 32 //32K
 
@@ -58,17 +59,33 @@ downloadServerSocket_c::downloadServerSocket_c(
 
 void downloadServerSocket_c::readyRead_f()
 {
-    //there is no toQString
-    std::string filePathStr(this->readAll().toStdString());
-    //convert w/e there is in the readAll as it was a filename and try to check it
-    QString filePathQStr(QString::fromStdString(filePathStr));
+    QString filePathQStr;
+    if (not mirrorConfig_ext.password_f().isEmpty())
+    {
+        QJsonDocument jsonDocumentTmp(QJsonDocument::fromJson(this->readAll()));
+        requestWithPass_c requestWithPassTmp;
+        requestWithPassTmp.read_f(jsonDocumentTmp.object());
+
+        if (requestWithPassTmp.password_f() == mirrorConfig_ext.password_f())
+        {
+            filePathQStr = requestWithPassTmp.data_f();
+        }
+        else
+        {
+            this->disconnectFromHost();
+        }
+    }
+    else
+    {
+        filePathQStr.append(this->readAll());
+    }
 #ifdef DEBUGJOUVEN
     //QOUT_TS("(downloadServerSocket_c::readyRead_f) filePathQStr " << filePathQStr << endl);
 #endif
     //if the filePath is not empty and the filePath is on the localUmap
     if (not filePathQStr.isEmpty())
     {
-        const std::pair<std::unordered_map<std::string, fileStatus_s>::const_iterator, bool> fileFindResult_con(mirrorConfig_ext.getHashedFileIterator_f(filePathStr));
+        const std::pair<std::unordered_map<std::string, fileStatus_s>::const_iterator, bool> fileFindResult_con(mirrorConfig_ext.getHashedFileIterator_f(filePathQStr.toStdString()));
         if (fileFindResult_con.second)
         {
             QFile fileTmp(filePathQStr);

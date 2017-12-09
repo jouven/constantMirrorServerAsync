@@ -17,6 +17,24 @@
 #include <unordered_map>
 //#include <unordered_set>
 
+class requestWithPass_c
+{
+    QString data_pri;
+    QString password_pri;
+public:
+    requestWithPass_c() = default;
+    requestWithPass_c(
+            const QString& data_par_con
+            , const QString& password_par_con = QString()
+    );
+
+    void read_f(const QJsonObject &json);
+    void write_f(QJsonObject &json) const;
+
+    QString password_f() const;
+    QString data_f() const;
+};
+
 struct clientInfo_s
 {
     QHostAddress address_pub;
@@ -49,7 +67,7 @@ class mirrorConfigSourceDestinationMapping_c : public eines::baseClassQt_c
     QString includeDirectoriesWithFileX_pri;
 
     //"source"/"destination" how often to check local files for changes
-    qint64 localCheckIntervalMilliseconds_pri = 2000;
+    qint64 localCheckIntervalMilliseconds_pri = 10000;
 
     int_fast64_t localLastCheckedIntervalMilliseconds_pri = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
@@ -112,6 +130,8 @@ class mirrorConfig_c : public eines::baseClassQt_c
     //if the sender reads faster than the client can write...
     uint_fast64_t senderFasterThanReceiver_pri = 0;
 
+    QString password_pri;
+
     //serialized/deserialized fields END
 
     std::unordered_map<std::string, clientInfo_s> recentClients_pri;
@@ -158,6 +178,7 @@ public:
 
     std::pair<std::unordered_map<std::string, fileStatus_s>::const_iterator, bool> getHashedFileIterator_f(const std::string& filename_par_con);
     void addRecentClient(const QHostAddress ip_par_con, const quint16 port_par_con);
+    QString password_f() const;
 };
 
 extern mirrorConfig_c mirrorConfig_ext;
