@@ -227,6 +227,7 @@ void mirrorConfigSourceDestinationMapping_c::localScan_f()
             }
         }
         generateJSONRequired_pri = anyFileChangedTmp;
+        QOUT_TS("Finished local scan changed=" << anyFileChangedTmp << " " << sourceTmp.filePath() << endl);
     }
 #ifdef DEBUGJOUVEN
     //QOUT_TS("(mirrorConfigSourceDestinationMapping_c::localScan_f() end" << endl);
@@ -266,7 +267,7 @@ void mirrorConfig_c::localScan_f()
         sourceDestinationMapping_ite.localScan_f();
         generateJSONRequiredTmp = generateJSONRequiredTmp or sourceDestinationMapping_ite.generateJSONRequired_f();
     }
-    QOUT_TS("Finished local scan" << endl);
+
     if (generateJSONRequiredTmp or not JSONFileListGeneratedOnce_pri)
     {
         generateJSONFileList();
@@ -590,6 +591,8 @@ R"({
 "requestServerPort" which port to use to setup the server to make request to get the hash+size per file list
 
 "fileServerPort" which port to use to setup the server to download files
+
+"password" optional, servers, download and file request, will check for this password in the client/s request/s, failure to comply will result on their disconnection
 
 "sourceDestinationMappings[x].localCheckIntervalMilliseconds" optional, interval to check for changes locally. 1000 ms by default
 
