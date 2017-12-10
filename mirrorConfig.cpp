@@ -592,7 +592,7 @@ R"({
 
 "fileServerPort" which port to use to setup the server to download files
 
-"password" optional, servers, download and file request, will check for this password in the client/s request/s, failure to comply will result on their disconnection
+"password" optional, servers, download and file request, will check for this password in the client/s request/s, mismatches will get disconnected without any response
 
 "sourceDestinationMappings[x].localCheckIntervalMilliseconds" optional, interval to check for changes locally. 1000 ms by default
 
