@@ -118,7 +118,7 @@ std::pair<std::unordered_map<std::string, fileStatus_s>::iterator, bool> mirrorC
 }
 
 mirrorConfigSourceDestinationMapping_c::mirrorConfigSourceDestinationMapping_c()
-    : id_pri(generateId_f()), fileHashControl_pri("localFileStatusUMAPMutexId_" + std::to_string(id_pri))
+    : id_pri(generateId_f()), fileHashControl_pri(false, "localFileStatusUMAPMutexId_" + std::to_string(id_pri))
 {
 }
 
