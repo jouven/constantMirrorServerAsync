@@ -25,7 +25,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include <boost/math/common_factor.hpp>
+#include <numeric>
+
+//#include <boost/math/common_factor.hpp>
 
 int_fast64_t generateId_f()
 {
@@ -245,7 +247,7 @@ void mirrorConfigSourceDestinationMapping_c::checkValid_f()
 
     if (localCheckIntervalMilliseconds_pri < 1)
     {
-        appendError_f("Local check interval time is invalid " + localCheckIntervalMilliseconds_pri);
+        appendError_f("Local check interval time is invalid " + QString::number(localCheckIntervalMilliseconds_pri));
         isValidTmp = false;
     }
 
@@ -362,10 +364,11 @@ void mirrorConfig_c::checkValid_f()
         //the third field in std::acumulate is the initial/default value
         gcdWaitMillisecondsAll_pri = std::accumulate(validIntervals.cbegin(), validIntervals.cend(), validIntervals.front(), [](const int_fast64_t a, const int_fast64_t b)
         {
-            return boost::math::gcd(a, b);
+            //return boost::math::gcd(a, b);
+            return std::gcd(a, b);
         });
 
-        eines::removeIfPredicateTrue_f(sourceDestinationMappings_pri, [](const auto& item_par_con){return not item_par_con->isValid_f();});
+        removeIfPredicateTrue_ft(sourceDestinationMappings_pri, [](const auto& item_par_con){return not item_par_con->isValid_f();});
     }
 
     valid_pri = validResult;
@@ -762,7 +765,7 @@ void mirrorConfig_c::mainLoop_f()
     }
     else
     {
-        if (eines::signal::threadCount_f() > 1 or qThreadCount_f() > 0)
+        if (eines::signal::threadCount_f() > 1 or threadedFunction_c::qThreadCount_f() > 0)
         {
             //QOUT_TS("qthreads counter " << qThreadCount_f() << endl);
             //QOUT_TS("eines::signal::threadCount_f() " << eines::signal::threadCount_f() << endl);

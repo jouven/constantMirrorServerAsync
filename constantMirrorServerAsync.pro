@@ -1,24 +1,17 @@
-QT += core network
+QT += network
 QT -= gui
 
-QMAKE_CXXFLAGS += -std=c++17
+!android:QMAKE_CXXFLAGS += -std=c++17
+android:QMAKE_CXXFLAGS += -std=c++14
 
 TARGET = constantMirrorServerAsync
 CONFIG += console
 CONFIG -= app_bundle
 CONFIG += no_keywords
+#(only windows) fixes the extra tier of debug and release build directories inside the first build directories
+win32:CONFIG -= debug_and_release
 
 TEMPLATE = app
-
-SOURCES += main.cpp \
-    mirrorConfig.cpp \
-    downloadServer.cpp \
-    updateClient.cpp \
-    fileListRequestServer.cpp \
-    downloadServerSocket.cpp \
-    downloadServerThread.cpp \
-    fileListRequestServerThread.cpp \
-    fileListRequestServerSocket.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -41,13 +34,22 @@ HEADERS += \
     fileListRequestServerThread.hpp \
     fileListRequestServerSocket.hpp
 
+SOURCES += main.cpp \
+    mirrorConfig.cpp \
+    downloadServer.cpp \
+    updateClient.cpp \
+    fileListRequestServer.cpp \
+    downloadServerSocket.cpp \
+    downloadServerThread.cpp \
+    fileListRequestServerThread.cpp \
+    fileListRequestServerSocket.cpp    
+    
 !win32:MYPATH = "/"
 win32:MYPATH = "H:/veryuseddata/portable/msys64/"
 
 #mine
 INCLUDEPATH += $${MYPATH}home/jouven/mylibs/include
 
-LIBS += -lessentialQtso -lsignalso -lbaseClassQtso -lqmutexUMapQtso -lsslUtilsso -lthreadedFunctionQtso -lfileHashQtso -lssl -lcrypto
 #don't new line the "{"
 #release
 CONFIG(release, debug|release){
@@ -57,26 +59,30 @@ CONFIG(release, debug|release){
 }
 #debug
 CONFIG(debug, debug|release){
-    LIBS += -L$${MYPATH}home/jouven/mylibs/debug/ -lbackwardSTso -ltimeso -lboost_date_time
+    LIBS += -L$${MYPATH}home/jouven/mylibs/debug/ -lbackwardSTso -ltimeso
+!win32:LIBS += -lboost_date_time
+win32:LIBS += -lboost_date_time-mt
     DEPENDPATH += $${MYPATH}home/jouven/mylibs/debug
     QMAKE_RPATHDIR += $${MYPATH}home/jouven/mylibs/debug
     DEFINES += DEBUGJOUVEN
 }
 
+LIBS += -lessentialQtso -lsignalso -lbaseClassQtso -lqmutexUMapQtso -lsslUtilsso -lthreadedFunctionQtso -lfileHashQtso -lssl -lcrypto
+
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_DEBUG += -pedantic -Wall -Wextra -g3
 
-#if not win32, add flto, mingw (on msys2) can't handle lto
-!win32:QMAKE_CXXFLAGS_RELEASE += -flto=jobserver
-#qt QMAKE defaults strike again, adds -mtune=core2 just because in win32
-win32:QMAKE_CXXFLAGS -= -mtune=core2
-QMAKE_CXXFLAGS_RELEASE += -mtune=sandybridge
+#if not win32, add flto, mingw (on msys2) can't handle lto, CXXFLAGS
+linux:QMAKE_CXXFLAGS_RELEASE += -flto=jobserver
+#win32::QMAKE_CXXFLAGS_RELEASE += -flto
+!android:QMAKE_CXXFLAGS_RELEASE += -mtune=sandybridge
 
-#for -flto=jobserver in the link step to work with -j4
-!win32:QMAKE_LINK = +g++
+#for -flto=jobserver in the link step to work with -jX
+linux:!android:QMAKE_LINK = +g++
 
-unix:QMAKE_LFLAGS += -fuse-ld=gold
+linux:QMAKE_LFLAGS += -fuse-ld=gold
 QMAKE_LFLAGS_RELEASE += -fvisibility=hidden
-#if not win32, add flto, mingw (on msys2) can't handle lto
-!win32:QMAKE_LFLAGS_RELEASE += -flto=jobserver
+#if not win32, add flto, mingw (on msys2) can't handle lto, LFLAGS
+linux:QMAKE_LFLAGS_RELEASE += -flto=jobserver
+#win32::QMAKE_LFLAGS_RELEASE += -flto
 
