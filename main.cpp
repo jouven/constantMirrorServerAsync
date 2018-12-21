@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     //thread for the main program qt stuff
     //IMPORTANT this detached is necessary because were the QCoreApplication stuff on the main
     //it would get hang when a signal happened, signal hangs main() but not detached threads
-    eines::signal::launchThread_f([&]()
+    signalso::launchThread_f([&]()
     {
         QCoreApplication qtapp(argc, argv);
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
         returnValue_ext = qtapp.exec();
     });
 
-    while (not eines::signal::isTheEnd_f())
+    while (not signalso::isTheEnd_f())
     {}
 
     return returnValue_ext;

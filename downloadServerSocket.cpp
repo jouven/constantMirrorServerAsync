@@ -134,7 +134,7 @@ void downloadServerSocket_c::readyRead_f()
                             //QOUT_TS("(downloadServerSocket_c::readyRead_f) do write bufferTmp " << QString::fromStdString(bufferTmp) << endl);
                             //QOUT_TS("(downloadServerSocket_c::readyRead_f) actualBufferSize " << actualBufferSize << endl);
 #endif
-                            if (not eines::signal::isRunning_f())
+                            if (not signalso::isRunning_f())
                             {
                                 this->disconnectFromHost();
                                 return;
@@ -172,7 +172,7 @@ void downloadServerSocket_c::readyRead_f()
                             //already with this measure it's already using 2MB of memory
                             //per socket (if the read data is that size or more)
                             //This theoretically limits the speed to 2000MB/s
-                            while ((unwrittenBytesCount_pri > (BUFFERSIZE * 32 * 2)) and eines::signal::isRunning_f())
+                            while ((unwrittenBytesCount_pri > (BUFFERSIZE * 32 * 2)) and signalso::isRunning_f())
                             {
                                 QCoreApplication::processEvents();
                                 QThread::msleep(1);
@@ -184,7 +184,7 @@ void downloadServerSocket_c::readyRead_f()
                             {
                                 rehashingTmp = true;
                             }
-                        } while ((sizeReadTmp > 0) and (fileTmp.bytesAvailable() >= actualBufferSize) and not rehashingTmp and eines::signal::isRunning_f());
+                        } while ((sizeReadTmp > 0) and (fileTmp.bytesAvailable() >= actualBufferSize) and not rehashingTmp and signalso::isRunning_f());
                         //the loop goes out when:
                         //1 there is no more to read OR
                         //2 buffer is bigger than what's left to read

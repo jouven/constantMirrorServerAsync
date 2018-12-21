@@ -168,7 +168,7 @@ void mirrorConfigSourceDestinationMapping_c::localScan_f()
 #ifdef DEBUGJOUVEN
     //QOUT_TS("(mirrorConfigSourceDestinationMapping_c::localScan_f() begin" << endl);
 #endif
-    if (not eines::signal::isRunning_f())
+    if (not signalso::isRunning_f())
     {
         return;
     }
@@ -641,7 +641,7 @@ R"({
     {
         qtErrRef_ext() << "Errors:\n" << errorStr << endl;
         returnValue_ext = EXIT_FAILURE;
-        eines::signal::stopRunning_f();
+        signalso::stopRunning_f();
         QCoreApplication::quit();
         return;
     }
@@ -697,7 +697,7 @@ R"({
 void mirrorConfig_c::mainLoop_f()
 {
     //QOUT_TS("mirrorConfig_c::mainLoop() start" << endl);
-    if (eines::signal::isRunning_f())
+    if (signalso::isRunning_f())
     {
         if (not localScanThreadExists_pri)
         {
@@ -724,7 +724,7 @@ void mirrorConfig_c::mainLoop_f()
 #endif
             for (auto& clientItem_ite : recentClients_pri)
             {
-                if (not eines::signal::isRunning_f())
+                if (not signalso::isRunning_f())
                 {
                     break;
                 }
@@ -765,10 +765,10 @@ void mirrorConfig_c::mainLoop_f()
     }
     else
     {
-        if (eines::signal::threadCount_f() > 1 or threadedFunction_c::qThreadCount_f() > 0)
+        if (signalso::threadCount_f() > 1 or threadedFunction_c::qThreadCount_f() > 0)
         {
             //QOUT_TS("qthreads counter " << qThreadCount_f() << endl);
-            //QOUT_TS("eines::signal::threadCount_f() " << eines::signal::threadCount_f() << endl);
+            //QOUT_TS("signalso::threadCount_f() " << signalso::threadCount_f() << endl);
             //change the interval and wait another cycle
             if (mainLoopTimer_pri->interval() != 10)
             {
@@ -786,7 +786,7 @@ void mirrorConfig_c::mainLoop_f()
         else
         {
             //QOUT_TS("qthreads counter " << QThreadCount_f() << endl);
-            //QOUT_TS("eines::signal::threadCount_f() " << eines::signal::threadCount_f() << endl);
+            //QOUT_TS("signalso::threadCount_f() " << signalso::threadCount_f() << endl);
             //QOUT_TS("QCoreApplication::exit();"<< endl);
             QCoreApplication::exit();
         }
