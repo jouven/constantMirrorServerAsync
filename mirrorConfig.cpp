@@ -652,7 +652,7 @@ R"({
             QSslConfiguration sslOptions(QSslConfiguration::defaultConfiguration());
             sslOptions.setSslOption(QSsl::SslOptionDisableCompression, false);
             sslOptions.setPeerVerifyMode(QSslSocket::VerifyNone);
-            eines::sslUtils_c sslUtilsTmp;
+            sslUtils_c sslUtilsTmp;
             sslOptions.setPrivateKey(QSslKey(QByteArray::fromStdString(sslUtilsTmp.privateKeyStr_f()), QSsl::Rsa));
             sslOptions.setLocalCertificate(QSslCertificate(QByteArray::fromStdString(sslUtilsTmp.keyCertificateStr_f())));
 
