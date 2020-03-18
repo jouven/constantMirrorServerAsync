@@ -347,7 +347,7 @@ void mirrorConfig_c::checkValid_f()
     for (mirrorConfigSourceDestinationMapping_c& sourceDestinationMapping_ite : sourceDestinationMappings_pri)
     {
         sourceDestinationMapping_ite.checkValid_f();
-        appendError_f(sourceDestinationMapping_ite.getError_f());
+        appendErrors_f(sourceDestinationMapping_ite.getErrors_f());
         if (sourceDestinationMapping_ite.isValid_f())
         {
             validIntervals.emplace_back(sourceDestinationMapping_ite.localCheckIntervalMilliseconds_f());
@@ -540,8 +540,8 @@ void mirrorConfig_c::initialSetup_f()
     //Process the actual command line arguments given by the user
     commandLineParser.process(*qApp);
 
-    QString errorStr;
-    while (errorStr.isEmpty())
+    textCompilation_c errors;
+    while (true)
     {
         QString configFilePathStr;
         const QStringList parsedPositionalArgs(commandLineParser.positionalArguments());
@@ -550,13 +550,13 @@ void mirrorConfig_c::initialSetup_f()
             QString configjsonAlternativePathStr(parsedPositionalArgs.at(0));
             if (configjsonAlternativePathStr.isEmpty())
             {
-                errorStr.append("Config.json path is empty");
+                errors.append_f("Config.json path is empty");
                 break;
             }
 
             if (not QFile::exists(configjsonAlternativePathStr))
             {
-                errorStr.append("Config.json path doesn't exist " + configjsonAlternativePathStr);
+                errors.append_f("Config.json path doesn't exist " + configjsonAlternativePathStr);
                 break;
             }
             configFilePathStr = configjsonAlternativePathStr;
@@ -570,7 +570,7 @@ void mirrorConfig_c::initialSetup_f()
         QFile configFile(configFilePathStr);
         if (not configFile.exists())
         {
-            errorStr.append("Config file, config.json, doesn't exist.\nIt has to exist on the same path as the constantMirrorServerTcp executable and it must have the following structure:\n"
+            errors.append_f("Config file, config.json, doesn't exist.\nIt has to exist on the same path as the constantMirrorServerTcp executable and it must have the following structure:\n"
 R"({
     "selfServerAddress": "192.168.1.5"
     , "requestServerPort": "30001"
@@ -616,14 +616,14 @@ R"({
         }
         else
         {
-            errorStr.append("Could not open config file config.json");
+            errors.append_f("Could not open config file config.json");
             break;
         }
 
         auto jsonDocObj(QJsonDocument::fromJson(jsonByteArray));
         if (jsonDocObj.isNull())
         {
-            errorStr.append("Could not parse json from the config file config.json");
+            errors.append_f("Could not parse json from the config file config.json");
             break;
         }
         else
@@ -632,14 +632,14 @@ R"({
         }
 
         checkValid_f();
-        errorStr.append(getError_f());
+        errors.append_f(getErrors_f());
 
         break;
     }
 
-    if (not errorStr.isEmpty())
+    if (not errors.empty_f())
     {
-        qtErrRef_ext() << "Errors:\n" << errorStr << endl;
+        qtErrRef_ext() << "Errors:\n" << errors.toRawReplace_f() << endl;
         returnValue_ext = EXIT_FAILURE;
         signalso::stopRunning_f();
         QCoreApplication::quit();
@@ -770,7 +770,7 @@ void mirrorConfig_c::mainLoop_f()
             //QOUT_TS("qthreads counter " << qThreadCount_f() << endl);
             //QOUT_TS("signalso::threadCount_f() " << signalso::threadCount_f() << endl);
             //change the interval and wait another cycle
-            if (mainLoopTimer_pri->interval() != 10)
+            if (mainLoopTimer_pri->interval() not_eq 10)
             {
                 mainLoopTimer_pri->start(10);
                 if (downloadServer_pri->isListening())

@@ -67,7 +67,7 @@ win32:LIBS += -lboost_date_time-mt
     DEFINES += DEBUGJOUVEN
 }
 
-LIBS += -lessentialQtso -lsignalso -lbaseClassQtso -lqmutexUMapQtso -lsslUtilsso -lthreadedFunctionQtso -lfileHashQtso -lssl -lcrypto
+LIBS += -ltextQtso -lessentialQtso -lsignalso -lbaseClassQtso -lqmutexUMapQtso -lsslUtilsso -lthreadedFunctionQtso -lfileHashQtso -lssl -lcrypto
 
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_DEBUG += -pedantic -Wall -Wextra -g3

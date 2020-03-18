@@ -6,6 +6,9 @@
 //also this program does requests to clients/"destination" programs to tell them there has been changes.
 //right now it's command-line-always-running-process
 
+//TODO-FUTURE 20200319 this program can be improved a lot adding a GUI also, doing an algorithm that fills the download queue depending on the speed and
+//the queue of files to download the size of each file, e.g., if there are a lot of small files queue up more downloads since their size won't cap the network speed
+
 #include "mirrorConfig.hpp"
 
 #include "signalso/signal.hpp"
